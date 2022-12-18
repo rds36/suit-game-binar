@@ -11,4 +11,9 @@
     <string name="game_txt_com">Com</string>
     <string name="splash_txt_suit">SUIT</string>
     <string name="splash_txt_game">GAME</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="vs_pemain">vs pemain</string>
+    <string name="vs_computer">vs computer</string>
+    <string name="menu_act_title">PILIH LAWANMU</string>
 </resources>

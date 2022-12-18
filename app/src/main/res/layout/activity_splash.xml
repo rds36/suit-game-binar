@@ -13,38 +13,13 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal">
+
         <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="wrap_content"
+            android:id="@+id/iv_splashscreen"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
             android:layout_gravity="center"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_batu"/>
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_gunting"/>
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_kertas"/>
+            android:src="@drawable/ic_batu" />
     </androidx.appcompat.widget.LinearLayoutCompat>
-    <TextView
-        android:gravity="center"
-        android:textSize="48sp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textColor="@color/blue"
-        android:text="@string/splash_txt_suit"
-        />
-    <TextView
-        android:gravity="center"
-        android:textSize="48sp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#4A4A4A"
-        android:text="@string/splash_txt_game"
-        />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

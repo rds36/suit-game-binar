@@ -2,18 +2,25 @@ package com.example.gamesuitbinar
 
 import android.os.Bundle
 import android.util.Log
-import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.gamesuitbinar.databinding.ActivityMainBinding
+import com.example.gamesuitbinar.dialog.GameDialog
 import com.example.gamesuitbinar.model.MatchResult
 import com.example.gamesuitbinar.model.Player
+import com.example.gamesuitbinar.util.AppConfiguration.MODE_VS_COM
+import com.example.gamesuitbinar.util.AppConfiguration.MODE_VS_PLAYER
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var player: Player
-    private lateinit var com: Player
+    private lateinit var player1: Player
+    private lateinit var player2: Player
+    private lateinit var gameMode: String
+    private lateinit var name: String
+    private var dialog: GameDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,12 +29,29 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
 
         setUpGame()
+        setUpView()
         setUpAction()
     }
 
+    private fun setUpView() {
+        val text = if (gameMode == MODE_VS_PLAYER) "Player 2" else "CPU"
+        binding.apply {
+            tvPlayer2.text = text
+            tvPlayer1.text = name
+
+            Glide.with(this@MainActivity)
+                .load("https://i.ibb.co/HC5ZPgD/splash-screen1.png")
+                .circleCrop()
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .into(binding.appLogo)
+        }
+    }
+
     private fun setUpGame() {
-        player = Player()
-        com = Player()
+        player1 = Player()
+        player2 = Player()
+        gameMode = intent.getStringExtra("gameMode").toString()
+        name = intent.getStringExtra("name").toString()
     }
 
     private fun setUpAction() {
@@ -42,82 +66,161 @@ class MainActivity : AppCompatActivity() {
                 onPlayerSelect(SCISSOR)
             }
             btnRefresh.setOnClickListener {
-                if (player.choice != null) {
-                    reset()
-                }
+                reset()
+            }
+            btnClose.setOnClickListener {
+                finish()
             }
         }
     }
 
     private fun onPlayerSelect(choice: String) {
         // Set player selection
-        player.choice = choice
-        playerSelectedButton(choice)
+        player1.choice = choice
+        playerOneSelectedButton(choice)
 
-        // Get Random choice from com & set selected button based on choice
-        com.choice = listChoice.random()
-        comSelectedButton(com.choice!!)
-
-        // Show log player and com choices
-        Log.d("PLAYER", player.choice!!)
-        Log.d("COM", com.choice!!)
-
-        getWinner()
+        when (gameMode) {
+            MODE_VS_PLAYER -> {
+                getPlayerTwoChoice()
+            }
+            MODE_VS_COM -> {
+                getComChoice()
+            }
+        }
     }
 
-    private fun getWinner() {
-        when (player.choice) {
+    private fun getPlayerTwoChoice() {
+        binding.apply {
+            btnPaperPlayerTwo.apply {
+                isClickable = true
+                setOnClickListener {
+                    playerTwoSelectedButton(PAPER)
+                    player2.choice = PAPER
+                    getWinnerVsPlayer()
+                }
+
+            }
+
+            btnRockPlayerTwo.apply {
+                isClickable = true
+                setOnClickListener {
+                    playerTwoSelectedButton(ROCK)
+                    player2.choice = ROCK
+                    getWinnerVsPlayer()
+                }
+            }
+
+            btnScissorPlayerTwo.apply {
+                isClickable = true
+                setOnClickListener {
+                    playerTwoSelectedButton(SCISSOR)
+                    player2.choice = SCISSOR
+                    getWinnerVsPlayer()
+                }
+            }
+        }
+    }
+
+    private fun getComChoice() {
+        // Get Random choice from com & set selected button based on choice
+        player2.choice = listChoice.random()
+        comSelectedButton(player2.choice!!)
+
+        // Show log player and com choices
+        Log.d("PLAYER", player1.choice!!)
+        Log.d("COM", player2.choice!!)
+
+        getWinnerVsCom()
+    }
+
+    private fun getWinnerVsCom() {
+        when (player1.choice) {
             ROCK -> {
-                when (com.choice) {
+                when (player2.choice) {
                     ROCK -> setMatchResult(MatchResult.DRAW)
                     PAPER -> setMatchResult(MatchResult.COM_WINS)
-                    SCISSOR -> setMatchResult(MatchResult.PLAYER_WINS)
+                    SCISSOR -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
                 }
             }
             PAPER -> {
-                when (com.choice) {
-                    ROCK -> setMatchResult(MatchResult.PLAYER_WINS)
+                when (player2.choice) {
+                    ROCK -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
                     PAPER -> setMatchResult(MatchResult.DRAW)
                     SCISSOR -> setMatchResult(MatchResult.COM_WINS)
                 }
             }
             SCISSOR -> {
-                when (com.choice) {
+                when (player2.choice) {
                     ROCK -> setMatchResult(MatchResult.COM_WINS)
-                    PAPER -> setMatchResult(MatchResult.PLAYER_WINS)
+                    PAPER -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
                     SCISSOR -> setMatchResult(MatchResult.DRAW)
                 }
             }
         }
-        com.choice
+        player2.choice
+    }
+
+    private fun getWinnerVsPlayer() {
+        when (player1.choice) {
+            ROCK -> {
+                when (player2.choice) {
+                    ROCK -> setMatchResult(MatchResult.DRAW)
+                    PAPER -> setMatchResult(MatchResult.PLAYER_TWO_WINS)
+                    SCISSOR -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
+                }
+            }
+            PAPER -> {
+                when (player2.choice) {
+                    ROCK -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
+                    PAPER -> setMatchResult(MatchResult.DRAW)
+                    SCISSOR -> setMatchResult(MatchResult.PLAYER_TWO_WINS)
+                }
+            }
+            SCISSOR -> {
+                when (player2.choice) {
+                    ROCK -> setMatchResult(MatchResult.PLAYER_TWO_WINS)
+                    PAPER -> setMatchResult(MatchResult.PLAYER_ONE_WINS)
+                    SCISSOR -> setMatchResult(MatchResult.DRAW)
+                }
+            }
+        }
+        player2.choice
     }
 
     private fun setMatchResult(result: MatchResult) {
         // Change Announcements words
         when (result) {
-            MatchResult.PLAYER_WINS -> {
-                setWinnerAnnouncement("Player wins!")
+            MatchResult.PLAYER_ONE_WINS -> {
+                setWinnerAnnouncementDialog("Player One wins!")
+            }
+            MatchResult.PLAYER_TWO_WINS -> {
+                setWinnerAnnouncementDialog("Player Two wins!")
             }
             MatchResult.COM_WINS -> {
-                setWinnerAnnouncement("Com wins!")
+                setWinnerAnnouncementDialog("Com wins!")
             }
             MatchResult.DRAW -> {
-                setWinnerAnnouncement("Draw!", R.color.blue)
+                setWinnerAnnouncementDialog("Draw!")
             }
-            else -> {}
         }
-
-
     }
 
-    private fun setWinnerAnnouncement(message: String, @ColorRes resId:Int = R.color.green) {
-        binding.tvAnnouncement.apply {
-            text = message
-            textSize = 18.0f
-            setTextColor(AppCompatResources.getColorStateList(this@MainActivity, R.color.white))
-            backgroundTintList =
-                AppCompatResources.getColorStateList(this@MainActivity, resId)
-        }
+    private fun setWinnerAnnouncementDialog(message: String) {
+        dialog = GameDialog(
+            result = message,
+            onHomeBtnClicked = {
+                Log.d("MAIN ACT", "home clicked!")
+                dialog?.dismiss()
+                reset()
+                finish()
+            },
+            onRematchBtnClicked = {
+                Log.d("MAIN ACT", "rematch clicked!")
+                reset()
+                dialog?.dismiss()
+            }
+        )
+        dialog?.show(supportFragmentManager, "customDialog")
     }
 
     private fun reset() {
@@ -128,7 +231,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetAnnouncment() {
         binding.tvAnnouncement.apply {
-            text = "VS"
             textSize = 48.0f
             setTextColor(AppCompatResources.getColorStateList(this@MainActivity, R.color.red))
             backgroundTintList =
@@ -137,8 +239,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetChoice() {
-        player.choice = null
-        com.choice = null
+        player1.choice = null
+        player2.choice = null
     }
 
     private fun resetButton() {
@@ -161,23 +263,26 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Reset com choice buttons
-            btnRockCom.apply {
+            btnRockPlayerTwo.apply {
                 backgroundTintList =
                     AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                isClickable = false
             }
-            btnPaperCom.apply {
+            btnPaperPlayerTwo.apply {
                 backgroundTintList =
                     AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                isClickable = false
             }
-            btnScissorCom.apply {
+            btnScissorPlayerTwo.apply {
                 backgroundTintList =
                     AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                isClickable = false
             }
 
         }
     }
 
-    private fun playerSelectedButton(choice: String) {
+    private fun playerOneSelectedButton(choice: String) {
         binding.apply {
             when (choice) {
                 ROCK -> {
@@ -222,49 +327,94 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun playerTwoSelectedButton(choice: String) {
+        binding.apply {
+            when (choice) {
+                ROCK -> {
+                    btnRockPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(
+                            this@MainActivity,
+                            androidx.appcompat.R.color.material_grey_300
+                        )
+                    btnPaperPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                    btnScissorPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                }
+
+                PAPER -> {
+                    btnRockPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                    btnPaperPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(
+                            this@MainActivity,
+                            androidx.appcompat.R.color.material_grey_300
+                        )
+                    btnScissorPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                }
+
+                SCISSOR -> {
+                    btnRockPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                    btnPaperPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(this@MainActivity, R.color.white)
+                    btnScissorPlayerTwo.backgroundTintList =
+                        AppCompatResources.getColorStateList(
+                            this@MainActivity,
+                            androidx.appcompat.R.color.material_grey_300
+                        )
+                }
+            }
+            btnRockPlayerTwo.isClickable = false
+            btnPaperPlayerTwo.isClickable = false
+            btnScissorPlayerTwo.isClickable = false
+        }
+    }
+
     private fun comSelectedButton(choice: String) {
         binding.apply {
             when (choice) {
                 ROCK -> {
-                    btnRockCom.backgroundTintList =
+                    btnRockPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, androidx.appcompat.R.color.material_grey_300
                         )
-                    btnPaperCom.backgroundTintList =
+                    btnPaperPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
-                    btnScissorCom.backgroundTintList =
+                    btnScissorPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
                 }
 
                 PAPER -> {
-                    btnRockCom.backgroundTintList =
+                    btnRockPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
-                    btnPaperCom.backgroundTintList =
+                    btnPaperPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, androidx.appcompat.R.color.material_grey_300
                         )
-                    btnScissorCom.backgroundTintList =
+                    btnScissorPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
                 }
 
                 SCISSOR -> {
-                    btnRockCom.backgroundTintList =
+                    btnRockPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
-                    btnPaperCom.backgroundTintList =
+                    btnPaperPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, R.color.white
                         )
-                    btnScissorCom.backgroundTintList =
+                    btnScissorPlayerTwo.backgroundTintList =
                         AppCompatResources.getColorStateList(
                             this@MainActivity, androidx.appcompat.R.color.material_grey_300
                         )
